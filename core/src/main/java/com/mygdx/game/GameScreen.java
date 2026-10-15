@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -8,6 +9,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class GameScreen implements Screen {
@@ -15,70 +19,141 @@ public class GameScreen implements Screen {
     private OrthographicCamera camera;
 	private SpriteBatch batch;	   
 	private BitmapFont font;
-	private Tarro tarro;
-	private Lluvia lluvia;
-
-	   
+	private Nave nave;
+	private Asteroide asteroide;
+	
+	private Texture laserTex;
+	private Texture fondo;
+	private Sound sonidoLaser;
+	private Sound sonidoExplosion;
+	private Music  musicaFondo;
+	Array<Rectangle> laseres;
+	
+	private Array<CaidaLibre> objetosCayendo;
+    private float tiempoParaNuevoObjeto = 0;
 	//boolean activo = true;
 
 	public GameScreen(final GameLluviaMenu game) {
 		this.game = game;
-        this.batch = game.getBatch();
+		this.batch = game.getBatch();
         this.font = game.getFont();
-		  // load the images for the droplet and the bucket, 64x64 pixels each 	     
-		  Sound hurtSound = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
-		  tarro = new Tarro(new Texture(Gdx.files.internal("bucket.png")),hurtSound);
-         
-	      // load the drop sound effect and the rain background "music" 
-         Texture gota = new Texture(Gdx.files.internal("drop.png"));
-         Texture gotaMala = new Texture(Gdx.files.internal("dropBad.png"));
-         
-         Sound dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
-        
-	     Music rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
-         lluvia = new Lluvia(gota, gotaMala, dropSound, rainMusic);
-	      
-	      // camera
-	      camera = new OrthographicCamera();
-	      camera.setToOrtho(false, 800, 480);
-	      batch = new SpriteBatch();
-	      // creacion del tarro
-	      tarro.crear();
-	      
-	      // creacion de la lluvia
-	      lluvia.crear();
+        objetosCayendo = new Array<>();
+		camera = new OrthographicCamera();
+		camera.setToOrtho(false, 800, 480);
 	}
-
+	
+	@Override
+	public void show() {
+		nave = new Nave(270f, 9f);
+		laserTex = new Texture("laser.png");
+		fondo = new Texture("fondo_espacio.jpg");
+        laseres = new Array<>();
+        asteroide = new Asteroide(270f, 720f);
+        sonidoLaser = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
+        sonidoExplosion = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
+        musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("Music_PesoEstable.mp3"));
+        musicaFondo.setLooping(true);
+        musicaFondo.play();
+	}
+	
 	@Override
 	public void render(float delta) {
 		//limpia la pantalla con color azul obscuro.
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 		//actualizar matrices de la cámara
-		camera.update();
+		camera.update(); 
+		
 		//actualizar 
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
+		
+		batch.draw(fondo, 0, 0);
 		//dibujar textos
-		font.draw(batch, "Gotas totales: " + tarro.getPuntos(), 5, 475);
-		font.draw(batch, "Vidas : " + tarro.getVidas(), 670, 475);
+		font.draw(batch, "Puntos totales: " + nave.getPuntos(), 5, 475);
+		font.draw(batch, "Vidas : " + nave.getVidas(), 670, 475);
 		font.draw(batch, "HighScore : " + game.getHigherScore(), camera.viewportWidth/2-50, 475);
 		
-		if (!tarro.estaHerido()) {
-			// movimiento del tarro desde teclado
-	        tarro.actualizarMovimiento();        
-			// caida de la lluvia 
-	       if (!lluvia.actualizarMovimiento(tarro)) {
-	    	  //actualizar HigherScore
-	    	  if (game.getHigherScore()<tarro.getPuntos())
-	    		  game.setHigherScore(tarro.getPuntos());  
-	    	  //ir a la ventana de finde juego y destruir la actual
-	    	  game.setScreen(new GameOverScreen(game));
-	    	  dispose();
-	       }
+		
+		nave.mover();
+		nave.dibujar(batch);
+		
+		tiempoParaNuevoObjeto -= delta;
+		if(tiempoParaNuevoObjeto <= 0) {
+			float randomX = MathUtils.random(0, Gdx.graphics.getWidth() - 100);
+			
+			objetosCayendo.add(new Asteroide(randomX, Gdx.graphics.getHeight()));
+			
+			tiempoParaNuevoObjeto = 1.5f;
 		}
 		
-		tarro.dibujar(batch);
-		lluvia.actualizarDibujoLluvia(batch);
+		for(int i = objetosCayendo.size - 1; i >= 0; i--) {
+			CaidaLibre obj = objetosCayendo.get(i);
+			
+			obj.caer(200);
+			obj.dibujar(batch);
+			
+			if(obj.getHitbox().overlaps(nave.getHitbox())) {
+				nave.restarVida();
+				asteroide.setY(720);
+        		asteroide.setX(MathUtils.random(0, 980));
+	        	
+	        	if(nave.getVidas() <= 0) {
+	        		musicaFondo.stop();
+	        		//sonidoGameOver.play();
+	        		game.setScreen(new GameOverScreen(game, nave.getPuntos()));
+	        		dispose();
+	        	}
+				
+				objetosCayendo.removeIndex(i);
+			} else if(obj.getHitbox().y < -100) {
+				objetosCayendo.removeIndex(i);
+			}
+		}
+		
+		if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+        	Rectangle nuevoLaser = new Rectangle();
+        	sonidoLaser.play();
+        	nuevoLaser.x = nave.getX() + 35;
+        	nuevoLaser.y = nave.getY() + 100;
+        	laseres.add(nuevoLaser);
+        }
+		
+		for(int i = laseres.size - 1; i >= 0; i--) {
+        	Rectangle laser = laseres.get(i);
+        	
+        	laser.y += 480 * Gdx.graphics.getDeltaTime();
+        	
+        	boolean laserEliminado = false;
+        	
+        	if(laser.y > 720) {
+        		laseres.removeIndex(i);
+        		continue; 
+        	}
+        	
+        	
+        	for(int j = objetosCayendo.size - 1; j >= 0; j--) {
+        		CaidaLibre obj = objetosCayendo.get(j);
+        		
+        		if(laser.overlaps(obj.getHitbox())) {
+        			sonidoExplosion.play();
+        			laseres.removeIndex(i);      
+        			objetosCayendo.removeIndex(j); 
+        			nave.sumarPuntos();
+        			
+        			laserEliminado = true;
+        			break; 
+        		}
+        	}
+        	
+        	if(laserEliminado) {
+        		continue; 
+        	}
+        }
+		
+		for(Rectangle laser : laseres) {
+        	game.getBatch().draw(laserTex, laser.x, laser.y, 30, 60);
+        }
+        
 		
 		batch.end();
 	}
@@ -88,19 +163,12 @@ public class GameScreen implements Screen {
 	}
 
 	@Override
-	public void show() {
-	  // continuar con sonido de lluvia
-	  lluvia.continuar();
-	}
-
-	@Override
 	public void hide() {
 
 	}
 
 	@Override
 	public void pause() {
-		lluvia.pausar();
 		game.setScreen(new PausaScreen(game, this)); 
 	}
 
@@ -111,9 +179,9 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void dispose() {
-      tarro.destruir();
-      lluvia.destruir();
-
+      nave.dispose();
+      asteroide.dispose();
+      laserTex.dispose();
 	}
 
 }
