@@ -12,13 +12,14 @@ public abstract class PowerUp implements CaidaLibre{
 	protected Texture textura;
 	protected Rectangle hitbox;
 	protected Sound sonidoPickUp;
+	protected String texto;
 	
 	public PowerUp(float x, float y, Texture tx) {
 		this.x = x;
 		this.y = y;
 		this.textura = tx;
 		this.hitbox = new Rectangle(x, y, 50, 50);
-		this.sonidoPickUp = Gdx.audio.newSound(Gdx.files.internal(null));
+		this.sonidoPickUp = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
 	}
 	
 	@Override
@@ -28,7 +29,6 @@ public abstract class PowerUp implements CaidaLibre{
 	}
 	
 	public void recoger(Nave nave) {
-		System.out.println("Recogiendo powerups, aplicando efecto");
 		sonidoPickUp.play();
 		aplicarEfecto(nave);
 	}
@@ -54,6 +54,7 @@ public abstract class PowerUp implements CaidaLibre{
 	public float getY() {return y;}
 	public Texture getTextura() {return textura;}
 	public Sound getSonidoPickUp() {return sonidoPickUp;}
+	public String getTexto() {return texto;}
 
 	//Setters
 	public void setX(float x) {this.x = x;}
@@ -61,4 +62,5 @@ public abstract class PowerUp implements CaidaLibre{
 	public void setY(float y) {this.y = y;}
 	public void setHitbox(Rectangle hitbox) {this.hitbox = hitbox;}
 	public void setSonidoPickUp(Sound sonidoPickUp) {this.sonidoPickUp = sonidoPickUp;}
+	public void setTexto(String txt) {this.texto = txt;}
 }

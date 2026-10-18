@@ -37,8 +37,8 @@ public class GameOverScreen implements Screen {
 		game.getBatch().begin();
 		batch.draw(fondoGO, 0, 0);
 		game.getFont().draw(game.getBatch(), "GAME OVER", 100, 440);
-		game.getFont().draw(game.getBatch(), "Puntaje final: " + puntajeFinal, 100, 420);
-		game.getFont().draw(game.getBatch(), "Presiona ENTER para reiniciar", 100, 400);
+		game.getFont().draw(game.getBatch(), "Puntaje final: " + puntajeFinal, 100, 410);
+		game.getFont().draw(game.getBatch(), "Presiona ENTER para reiniciar", 100, 380);
 		game.getBatch().end();
 
 		if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {

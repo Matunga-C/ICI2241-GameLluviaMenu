@@ -14,8 +14,8 @@ public class Llave implements CaidaLibre{
 	public Llave(float x, float y) {
 		this.x = x;
 		this.y = y;
-		this.textura = new Texture("llave.jpg");
-		this.hitbox = new Rectangle(x, y, 100, 100);
+		this.textura = new Texture("llave.png");
+		this.hitbox = new Rectangle(x, y, 50, 50);
 	}
 	
 	
@@ -33,7 +33,7 @@ public class Llave implements CaidaLibre{
 
 	@Override
 	public void dibujar(SpriteBatch batch) {
-		batch.draw(textura, x, y, 100, 100);
+		batch.draw(textura, x, y, 50, 50);
 	}
 
 

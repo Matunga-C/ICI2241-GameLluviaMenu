@@ -1,6 +1,5 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -41,10 +40,10 @@ public class PausaScreen implements Screen {
 		batch.setProjectionMatrix(camera.combined);
 
 		batch.begin();
-		batch.draw(juego.getFondo(), 0, 0);
-		font.draw(batch, "Juego en Pausa ", 100, 400);
-		font.draw(batch, "Toca ENTER para continuar !!!", 100, 370);
-		font.draw(batch, "Toca ESC para volver al Menu Principal", 100, 340);
+		batch.draw(juego.getFondo1(), 0, 0);
+		font.draw(batch, "Juego en Pausa ", 80, 400);
+		font.draw(batch, "Toca ENTER para continuar !!!", 80, 370);
+		font.draw(batch, "Toca ESC para volver al Menu Principal", 80, 340);
 		batch.end();
 
 		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {

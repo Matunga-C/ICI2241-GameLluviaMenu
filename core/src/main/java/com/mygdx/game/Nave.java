@@ -14,13 +14,22 @@ public class Nave {
 	private int puntos = 0;
 	private Rectangle hitbox;
 	
+	private boolean invulnerable;
+	private float tiempoInvulnerabilidad;
 	
 	public Nave(float x, float y) {
 		this.x = x;
 		this.y = y;
 		this.nave = new Texture("nave_espacial.png");
 		this.vidas = 3;
-		this.hitbox = new Rectangle(x, y, 50, 50);
+		this.hitbox = new Rectangle(x, y, 70, 70);
+		this.invulnerable = false;
+		this.tiempoInvulnerabilidad = 0f;
+	}
+	
+	public void activarInvulnerabilidad() {
+		this.invulnerable = true;
+		this.tiempoInvulnerabilidad = 5.0f;
 	}
 	
 	public void mover() {
@@ -50,10 +59,28 @@ public class Nave {
         }
         hitbox.x = x;
         hitbox.y = y;
+        
+        if(invulnerable) {
+        	tiempoInvulnerabilidad -= Gdx.graphics.getDeltaTime();
+        	if(tiempoInvulnerabilidad <= 0) {
+        		invulnerable = false;
+        		
+        	}
+        }
 	}
 	
 	public void restarVida() {
-		this.vidas -= 1;
+		if(!invulnerable) {
+			this.vidas--;
+		}
+	}
+	
+	public void sumarVida() {
+		this.vidas++;
+	}
+	
+	public boolean isInvulnerable() {
+		return invulnerable;
 	}
 	
 	public void sumarPuntos() {
@@ -61,7 +88,7 @@ public class Nave {
 	}
 	
 	public void dibujar(SpriteBatch batch) {
-		batch.draw(nave, x, y, 50, 50);
+		batch.draw(nave, x, y, 70, 70);
 	}
 	
 	public void dispose() {

@@ -22,14 +22,17 @@ public class GameScreen implements Screen {
 	private Nave nave;
 	private Asteroide asteroide;
 	
-	private Texture fondo;
+	private Texture fondo1;
+	private Texture fondo2;
 	private Sound sonidoExplosion;
 	private Sound sonidoGameOver;
-	private Music  musicaFondo;
+	
 	
 	private float yFondo1;
 	private float yFondo2;
 	private float velocidadFondo = 150f;
+	private String mensajePantalla = "";
+	private float tiempoMensaje = 0f;
 	Array<Bala> laseres;
 	
 	private Array<CaidaLibre> objetosCayendo;
@@ -49,16 +52,16 @@ public class GameScreen implements Screen {
 	@Override
 	public void show() {
 		nave = new Nave(270f, 9f);
-		fondo = new Texture("fondo_espacio_volt.jpg");
+		fondo1 = new Texture("fondo_espacial_test.jpg");
+		fondo2 = new Texture("fondo_espacial_3_test.jpg");
 		yFondo1 = 0;
 		yFondo2 = 700;
         laseres = new Array<>();
         asteroide = new Asteroide(270f, 720f);
         sonidoExplosion = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
         sonidoGameOver = Gdx.audio.newSound(Gdx.files.internal("game_over_sound.wav"));
-        musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("Music_PesoEstable.mp3"));
-        musicaFondo.setLooping(true);
-        musicaFondo.play();
+        
+        
 	}
 	
 	@Override
@@ -69,7 +72,7 @@ public class GameScreen implements Screen {
 		camera.update(); 
 		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-			musicaFondo.pause();
+			menu.getMusicaFondo().pause();
 			game.setScreen(new PausaScreen(game, this, menu));
 		}
 		
@@ -87,8 +90,8 @@ public class GameScreen implements Screen {
 			yFondo2 = yFondo1 + 700;
 		}
 		
-		batch.draw(fondo, 0, yFondo1, 600, 700);
-		batch.draw(fondo, 0, yFondo2, 600, 700);
+		batch.draw(fondo1, 0, yFondo1, 600, 700);
+		batch.draw(fondo2, 0, yFondo2, 600, 700);
 		
 		//dibujar textos
 		font.draw(batch, "Puntos totales: " + nave.getPuntos(), 170, 680);
@@ -100,35 +103,61 @@ public class GameScreen implements Screen {
 		nave.mover();
 		nave.dibujar(batch);
 		
+		if(tiempoMensaje > 0) {
+			font.draw(batch, mensajePantalla, 100, 400);
+			tiempoMensaje -= delta;
+		}
+		
 		tiempoParaNuevoObjeto -= delta;
+		
 		if(tiempoParaNuevoObjeto <= 0) {
+			
 			float randomX = MathUtils.random(0, Gdx.graphics.getWidth() - 100);
 			
-			objetosCayendo.add(new Asteroide(randomX, Gdx.graphics.getHeight()));
+			float dado = MathUtils.random(1f, 100f);
 			
-			tiempoParaNuevoObjeto = 1.5f;
+			if(dado <= 95) {
+				objetosCayendo.add(new Asteroide(randomX, Gdx.graphics.getHeight()));
+			} else if(dado <= 97.5f) {
+				objetosCayendo.add(new Llave(randomX, Gdx.graphics.getHeight()));
+			} else {
+				Texture texPowerUp = new Texture("nave_espacial.png");
+				objetosCayendo.add(new Invulnerabilidad(randomX, Gdx.graphics.getHeight(), texPowerUp));
+			}
+			
+			tiempoParaNuevoObjeto = 0.5f;
 		}
 		
 		for(int i = objetosCayendo.size - 1; i >= 0; i--) {
 			CaidaLibre obj = objetosCayendo.get(i);
 			
-			obj.caer(200);
+			obj.caer(400);
 			obj.dibujar(batch);
 			
 			if(obj.getHitbox().overlaps(nave.getHitbox())) {
-				nave.restarVida();
-				asteroide.setY(720);
-        		asteroide.setX(MathUtils.random(0, 300));
-	        	
-	        	if(nave.getVidas() <= 0) {
-	        		if(game.getHigherScore() <= nave.getPuntos()) {
-	        			game.setHigherScore(nave.getPuntos());
-	        		}
-	        		musicaFondo.stop();
-	        		sonidoGameOver.play();
-	        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
-	        		dispose();
-	        	}
+				if(obj instanceof Asteroide) {
+					nave.restarVida();
+					asteroide.setY(720);
+	        		asteroide.setX(MathUtils.random(0, 300));
+		        	
+		        	if(nave.getVidas() <= 0) {
+		        		if(game.getHigherScore() <= nave.getPuntos()) {
+		        			game.setHigherScore(nave.getPuntos());
+		        		}
+		        		menu.getMusicaFondo().stop();
+		        		sonidoGameOver.play();
+		        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
+		        		dispose();
+		        	}
+				} else if(obj instanceof PowerUp) {
+					PowerUp powerUp = (PowerUp)obj;
+					powerUp.recoger(nave);
+					mensajePantalla = powerUp.getTexto();
+					tiempoMensaje = 2.0f;
+					
+				} else if(obj instanceof Llave) {
+					nave.sumarVida();
+				}
 				
 				objetosCayendo.removeIndex(i);
 			} else if(obj.getHitbox().y < -100) {
@@ -161,13 +190,15 @@ public class GameScreen implements Screen {
         		CaidaLibre obj = objetosCayendo.get(j);
         		
         		if(laserActual.getHitbox().overlaps(obj.getHitbox())) {
-        			sonidoExplosion.play();
-        			laseres.removeIndex(i);      
-        			objetosCayendo.removeIndex(j); 
-        			nave.sumarPuntos();
-        			
-        			laserEliminado = true;
-        			break; 
+        			if(obj instanceof Asteroide) {
+	        			sonidoExplosion.play();
+	        			laseres.removeIndex(i);      
+	        			objetosCayendo.removeIndex(j); 
+	        			nave.sumarPuntos();
+	        			
+	        			laserEliminado = true;
+	        			break;
+        			}	
         		}
         	}
         	
@@ -209,11 +240,11 @@ public class GameScreen implements Screen {
       asteroide.dispose();
 	}
 	
-	public Texture getFondo() {
-		return fondo;
+	public Texture getFondo1() {
+		return fondo1;
+	}
+	public Texture getFondo2() {
+		return fondo2;
 	}
 	
-	public Music getMusicaFondo() {
-		return musicaFondo;
-	}
 }

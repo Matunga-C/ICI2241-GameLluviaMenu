@@ -3,6 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -17,6 +18,7 @@ public class MainMenuScreen implements Screen {
 	private SpriteBatch batch;
 	private BitmapFont font;
 	private OrthographicCamera camera;
+	private Music  musicaFondo;
 
 	public MainMenuScreen(final GameLluviaMenu game) {
 		this.game = game;
@@ -36,6 +38,8 @@ public class MainMenuScreen implements Screen {
 		batch.begin();
 		batch.draw(fondoMM, 0, 0);
 		font.getData().setScale(2, 2);
+		musicaFondo.setLooping(true);
+        musicaFondo.play();
 		game.getFont().draw(game.getBatch(), "NAVE VS ASTEROIDES", 100, 440);
 		game.getFont().draw(game.getBatch(), "Presiona ENTER para jugar", 100, 410);
 		game.getFont().draw(game.getBatch(), "Presiona 1 para ver la ScoreBoard", 100, 380);
@@ -60,36 +64,31 @@ public class MainMenuScreen implements Screen {
 	@Override
 	public void show() {
 		this.fondoMM = new Texture("fondo_espacio_volt.jpg");
+		musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("musica_fondo_normal.mp3"));
 	}
 
 	@Override
-	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void resize(int width, int height) {}
 
 	@Override
-	public void pause() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void pause() {}
 
 	@Override
-	public void resume() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void resume() {}
 
 	@Override
-	public void hide() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void hide() {}
 
 	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-		
+	public void dispose() {}
+
+	public Music getMusicaFondo() {
+		return musicaFondo;
 	}
 
+	public void setMusicaFondo(Music musicaFondo) {
+		this.musicaFondo = musicaFondo;
+	}
+	
+	
 }
