@@ -35,37 +35,17 @@ public class Asteroide implements CaidaLibre{
 	}
 
 	@Override
-	public Rectangle getHitbox() {
-		return hitbox;
-	}
+	public Rectangle getHitbox() {return hitbox;}
 
-	public float getX() {
-		return x;
-	}
-
-	public void setX(float x) {
-		this.x = x;
-	}
-
-	public float getY() {
-		return y;
-	}
-
-	public void setY(float y) {
-		this.y = y;
-	}
-
-	public Texture getAsteroide() {
-		return asteroide;
-	}
-
-	public void setAsteroide(Texture asteroide) {
-		this.asteroide = asteroide;
-	}
-
-	public void setHitbox(Rectangle hitbox) {
-		this.hitbox = hitbox;
-	}
 	
+	public float getX() {return x;}
+	public float getY() {return y;}
+	public Texture getAsteroide() {return asteroide;}
+
+
+	public void setX(float x) {this.x = x;}
+	public void setY(float y) {this.y = y;}
+	public void setAsteroide(Texture asteroide) {this.asteroide = asteroide;}
+	public void setHitbox(Rectangle hitbox) {this.hitbox = hitbox;}
 	
 }

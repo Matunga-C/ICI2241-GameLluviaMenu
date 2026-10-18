@@ -10,47 +10,52 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class GameScreen implements Screen {
 	final GameLluviaMenu game;
+	private MainMenuScreen menu;
     private OrthographicCamera camera;
 	private SpriteBatch batch;	   
 	private BitmapFont font;
 	private Nave nave;
 	private Asteroide asteroide;
 	
-	private Texture laserTex;
 	private Texture fondo;
-	private Sound sonidoLaser;
 	private Sound sonidoExplosion;
+	private Sound sonidoGameOver;
 	private Music  musicaFondo;
-	Array<Rectangle> laseres;
+	
+	private float yFondo1;
+	private float yFondo2;
+	private float velocidadFondo = 150f;
+	Array<Bala> laseres;
 	
 	private Array<CaidaLibre> objetosCayendo;
     private float tiempoParaNuevoObjeto = 0;
 	//boolean activo = true;
 
-	public GameScreen(final GameLluviaMenu game) {
+	public GameScreen(final GameLluviaMenu game, MainMenuScreen menu) {
 		this.game = game;
+		this.menu = menu;
 		this.batch = game.getBatch();
         this.font = game.getFont();
         objetosCayendo = new Array<>();
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 800, 480);
+		camera.setToOrtho(false, 600, 700);
 	}
 	
 	@Override
 	public void show() {
 		nave = new Nave(270f, 9f);
-		laserTex = new Texture("laser.png");
-		fondo = new Texture("fondo_espacio.jpg");
+		fondo = new Texture("fondo_espacio_volt.jpg");
+		yFondo1 = 0;
+		yFondo2 = 700;
         laseres = new Array<>();
         asteroide = new Asteroide(270f, 720f);
-        sonidoLaser = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
         sonidoExplosion = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
+        sonidoGameOver = Gdx.audio.newSound(Gdx.files.internal("game_over_sound.wav"));
         musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("Music_PesoEstable.mp3"));
         musicaFondo.setLooping(true);
         musicaFondo.play();
@@ -63,15 +68,33 @@ public class GameScreen implements Screen {
 		//actualizar matrices de la cámara
 		camera.update(); 
 		
+		if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+			musicaFondo.pause();
+			game.setScreen(new PausaScreen(game, this, menu));
+		}
+		
 		//actualizar 
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		
-		batch.draw(fondo, 0, 0);
+		yFondo1 -= velocidadFondo * delta;
+		yFondo2 -= velocidadFondo * delta;
+		
+		if(yFondo1 + 700 <= 0) {
+			yFondo1 = yFondo2 + 700;
+		}
+		if(yFondo2 + 700 <= 0) {
+			yFondo2 = yFondo1 + 700;
+		}
+		
+		batch.draw(fondo, 0, yFondo1, 600, 700);
+		batch.draw(fondo, 0, yFondo2, 600, 700);
+		
 		//dibujar textos
-		font.draw(batch, "Puntos totales: " + nave.getPuntos(), 5, 475);
-		font.draw(batch, "Vidas : " + nave.getVidas(), 670, 475);
-		font.draw(batch, "HighScore : " + game.getHigherScore(), camera.viewportWidth/2-50, 475);
+		font.draw(batch, "Puntos totales: " + nave.getPuntos(), 170, 680);
+		font.draw(batch, "Vidas : " + nave.getVidas(), 480, 680);
+		font.draw(batch, "HighScore : " + game.getHigherScore(), 5, 25);
+		font.draw(batch, "P (Pausa)", 5, 680);
 		
 		
 		nave.mover();
@@ -95,12 +118,15 @@ public class GameScreen implements Screen {
 			if(obj.getHitbox().overlaps(nave.getHitbox())) {
 				nave.restarVida();
 				asteroide.setY(720);
-        		asteroide.setX(MathUtils.random(0, 980));
+        		asteroide.setX(MathUtils.random(0, 300));
 	        	
 	        	if(nave.getVidas() <= 0) {
+	        		if(game.getHigherScore() <= nave.getPuntos()) {
+	        			game.setHigherScore(nave.getPuntos());
+	        		}
 	        		musicaFondo.stop();
-	        		//sonidoGameOver.play();
-	        		game.setScreen(new GameOverScreen(game, nave.getPuntos()));
+	        		sonidoGameOver.play();
+	        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
 	        		dispose();
 	        	}
 				
@@ -111,21 +137,21 @@ public class GameScreen implements Screen {
 		}
 		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-        	Rectangle nuevoLaser = new Rectangle();
-        	sonidoLaser.play();
-        	nuevoLaser.x = nave.getX() + 35;
-        	nuevoLaser.y = nave.getY() + 100;
+        	Laser nuevoLaser = new Laser(100, nave.getX() + 15, nave.getY() + 50);
+        	nuevoLaser.getSonidoDisparo().play();
         	laseres.add(nuevoLaser);
         }
 		
 		for(int i = laseres.size - 1; i >= 0; i--) {
-        	Rectangle laser = laseres.get(i);
+        	Bala laserActual = laseres.get(i);
         	
-        	laser.y += 480 * Gdx.graphics.getDeltaTime();
+        	laserActual.actualizar(Gdx.graphics.getDeltaTime());
+        	laserActual.dibujar(batch);
+        	
         	
         	boolean laserEliminado = false;
         	
-        	if(laser.y > 720) {
+        	if(laserActual.getY() > 720) {
         		laseres.removeIndex(i);
         		continue; 
         	}
@@ -134,7 +160,7 @@ public class GameScreen implements Screen {
         	for(int j = objetosCayendo.size - 1; j >= 0; j--) {
         		CaidaLibre obj = objetosCayendo.get(j);
         		
-        		if(laser.overlaps(obj.getHitbox())) {
+        		if(laserActual.getHitbox().overlaps(obj.getHitbox())) {
         			sonidoExplosion.play();
         			laseres.removeIndex(i);      
         			objetosCayendo.removeIndex(j); 
@@ -150,8 +176,8 @@ public class GameScreen implements Screen {
         	}
         }
 		
-		for(Rectangle laser : laseres) {
-        	game.getBatch().draw(laserTex, laser.x, laser.y, 30, 60);
+		for(Bala laser : laseres) {
+        	game.getBatch().draw(laser.getTextura(), laser.getX(), laser.getY(), 30, 60);
         }
         
 		
@@ -169,7 +195,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void pause() {
-		game.setScreen(new PausaScreen(game, this)); 
+		game.setScreen(new PausaScreen(game, this, menu)); 
 	}
 
 	@Override
@@ -181,7 +207,13 @@ public class GameScreen implements Screen {
 	public void dispose() {
       nave.dispose();
       asteroide.dispose();
-      laserTex.dispose();
 	}
-
+	
+	public Texture getFondo() {
+		return fondo;
+	}
+	
+	public Music getMusicaFondo() {
+		return musicaFondo;
+	}
 }

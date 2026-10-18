@@ -6,14 +6,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-public abstract class PowerUps implements CaidaLibre{
+public abstract class PowerUp implements CaidaLibre{
 	protected float x; 
 	protected float y;
 	protected Texture textura;
 	protected Rectangle hitbox;
 	protected Sound sonidoPickUp;
 	
-	public PowerUps(float x, float y, Texture tx) {
+	public PowerUp(float x, float y, Texture tx) {
 		this.x = x;
 		this.y = y;
 		this.textura = tx;

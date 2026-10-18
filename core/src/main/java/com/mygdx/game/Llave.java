@@ -5,16 +5,16 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Llaves implements CaidaLibre{
+public class Llave implements CaidaLibre{
 	private float x;
 	private float y;
 	private Texture textura;
 	private Rectangle hitbox;
 	
-	public Llaves(float x, float y) {
+	public Llave(float x, float y) {
 		this.x = x;
 		this.y = y;
-		this.textura = new Texture("");
+		this.textura = new Texture("llave.jpg");
 		this.hitbox = new Rectangle(x, y, 100, 100);
 	}
 	

@@ -20,7 +20,7 @@ public class Nave {
 		this.y = y;
 		this.nave = new Texture("nave_espacial.png");
 		this.vidas = 3;
-		this.hitbox = new Rectangle(x, y, 100, 100);
+		this.hitbox = new Rectangle(x, y, 50, 50);
 	}
 	
 	public void mover() {
@@ -44,8 +44,8 @@ public class Nave {
         }
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
         	x += 300 * Gdx.graphics.getDeltaTime();
-        	if(x >= 1180.0f) {
-        		x = 1180.0f;
+        	if(x >= 550.0f) {
+        		x = 550.0f;
         	}
         }
         hitbox.x = x;
@@ -61,40 +61,27 @@ public class Nave {
 	}
 	
 	public void dibujar(SpriteBatch batch) {
-		batch.draw(nave, x, y, 100, 100);
+		batch.draw(nave, x, y, 50, 50);
 	}
 	
 	public void dispose() {
 		nave.dispose();
 	}
 	
-	public Texture getNave() {return nave;}
-
-	public void setNave(Texture nave) {this.nave = nave;}
-
+	//Getters
 	public float getX() {return x;}
-
-	public void setX(float x) {this.x = x;}
-
 	public float getY() {return y;}
-
-	public void setY(float y) {this.y = y;}
-
-	public int getVidas() {return vidas;}
-
-	public void setVidas(int vidas) {this.vidas = vidas;}
-
+	public Texture getNave() {return nave;}
 	public Rectangle getHitbox() {return hitbox;}
+	public int getVidas() {return vidas;}
+	public void setNave(Texture nave) {this.nave = nave;}
+	public int getPuntos() {return puntos;}
 
+	//Setters
+	public void setX(float x) {this.x = x;}
+	public void setY(float y) {this.y = y;}
+	public void setVidas(int vidas) {this.vidas = vidas;}
 	public void setHitbox(Rectangle hitbox) {this.hitbox = hitbox;}
+	public void setPuntos(int puntos) {this.puntos = puntos;}
 
-	public int getPuntos() {
-		return puntos;
-	}
-
-	public void setPuntos(int puntos) {
-		this.puntos = puntos;
-	}
-	
-	
 }
