@@ -43,6 +43,7 @@ public class GameOverScreen implements Screen {
 
 		if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
 			game.setScreen(new GameScreen(game, menu));
+			menu.getMusicaFondo().play();
 			dispose();
 		}
 	}

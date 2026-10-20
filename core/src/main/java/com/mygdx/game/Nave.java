@@ -83,8 +83,8 @@ public class Nave {
 		return invulnerable;
 	}
 	
-	public void sumarPuntos() {
-		this.puntos += 100;
+	public void sumarPuntos(int i) {
+		this.puntos += i;
 	}
 	
 	public void dibujar(SpriteBatch batch) {

@@ -47,7 +47,7 @@ public class PausaScreen implements Screen {
 		batch.end();
 
 		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-			
+			menuPrincipal.getMusicaFondo().play();
 			game.setScreen(juego);
 			dispose();
 		}
