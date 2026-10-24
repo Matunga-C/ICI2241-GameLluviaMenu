@@ -15,7 +15,7 @@ public class Asteroide implements CaidaLibre{
 		this.x = x;
 		this.y = y;
 		this.asteroide = new Texture("asteroide.png");
-		this.hitbox = new Rectangle(x, y, 100, 100);
+		this.hitbox = new Rectangle(x, y, 60, 80);
 	}
 	
 	@Override

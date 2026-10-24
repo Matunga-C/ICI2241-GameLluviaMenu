@@ -3,6 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -16,6 +17,7 @@ public class GameOverScreen implements Screen {
 	private SpriteBatch batch;	   
 	private BitmapFont font;
 	private OrthographicCamera camera;
+	private Sound sonidoGameOver;
 	private int puntajeFinal;
 
 	public GameOverScreen(final GameLluviaMenu game, int puntaje, MainMenuScreen menu) {
@@ -35,6 +37,7 @@ public class GameOverScreen implements Screen {
 		batch.setProjectionMatrix(camera.combined);
 
 		game.getBatch().begin();
+		sonidoGameOver.play();
 		batch.draw(fondoGO, 0, 0);
 		game.getFont().draw(game.getBatch(), "GAME OVER", 100, 440);
 		game.getFont().draw(game.getBatch(), "Puntaje final: " + puntajeFinal, 100, 410);
@@ -42,8 +45,9 @@ public class GameOverScreen implements Screen {
 		game.getBatch().end();
 
 		if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+			sonidoGameOver.stop();
 			game.setScreen(new GameScreen(game, menu));
-			menu.getMusicaFondo().play();
+			AdministradorJuego.getInstancia().reproducirMusicaMenu();
 			dispose();
 		}
 	}
@@ -51,6 +55,7 @@ public class GameOverScreen implements Screen {
 	@Override
 	public void show() {
 		this.fondoGO = new Texture("fondo_espacio_volt.jpg");
+		this.sonidoGameOver = Gdx.audio.newSound(Gdx.files.internal("game_over_sound.wav"));
 	}
 
 	@Override

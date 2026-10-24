@@ -25,7 +25,9 @@ public abstract class Bala {
 		batch.draw(textura, x, y, 30, 60);
 	}
 	
-	
+	public void dispose() {
+		textura.dispose();
+	}
 	public float getX() {return x;}
 	public float getY() {return y;}
 	public int getDanio() {return danio;}

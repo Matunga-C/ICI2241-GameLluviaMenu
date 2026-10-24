@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class GameScreen implements Screen {
+	
 	final GameLluviaMenu game;
 	private MainMenuScreen menu;
     private OrthographicCamera camera;
@@ -27,22 +28,23 @@ public class GameScreen implements Screen {
 	private Texture simRecarga;
 	private Texture sinEnergia;
 	private Sound sonidoExplosion;
-	private Sound sonidoGameOver;
 	
 	
+	private String mensajePantalla = "";
 	private float yFondo1;
 	private float yFondo2;
-	private float velocidadFondo = 150f;
-	private String mensajePantalla = "";
-	private float tiempoMensaje = 0f;
-	private float tiempoSprite = 0f;
-	int energiaDisponible = 30;
+	private int energiaDisponible = 30;
 	private boolean jefeActivo = false;
 	private boolean jefeDerrotado = false;
 	
-	Array<Bala> laseres;
-	
+	private Array<Bala> laseres;
 	private Array<CaidaLibre> objetosCayendo;
+	private Array<RayoJefe> ataquesJefes;
+	
+	private float velocidadFondo = 150f;
+	private float tiempoMensaje = 0f;
+	private float tiempoSprite = 0f;
+	private float cooldownAtaque = 3.0f;
     private float tiempoParaNuevoObjeto = 0;
 	//boolean activo = true;
 
@@ -68,9 +70,9 @@ public class GameScreen implements Screen {
 		yFondo1 = 0;
 		yFondo2 = 700;
         laseres = new Array<>();
+        ataquesJefes = new Array<>();
         sonidoExplosion = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
-        sonidoGameOver = Gdx.audio.newSound(Gdx.files.internal("game_over_sound.wav"));
-        
+        AdministradorJuego.getInstancia().reproducirMusicaJuego();
         
 	}
 	
@@ -81,9 +83,9 @@ public class GameScreen implements Screen {
 		//actualizar matrices de la cámara
 		camera.update(); 
 		
+		// Poner juego en pausa (falta arreglar que se reinician los puntajes y vidas)
 		if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-			menu.getMusicaFondo().pause();
-			jefeZumarah.getMusicaFondo().pause();
+			AdministradorJuego.getInstancia().detenerTodaLaMusica();
 			game.setScreen(new PausaScreen(game, this, menu));
 		}
 		
@@ -133,44 +135,13 @@ public class GameScreen implements Screen {
 		if(nave.getPuntos() >= 2500 && nave.getPuntos() != 0) {
 			if(!jefeActivo && !jefeDerrotado) {
 				jefeActivo = true;
-				menu.getMusicaFondo().stop();
-				jefeZumarah.getMusicaFondo().setLooping(true);
-				jefeZumarah.getMusicaFondo().play();
+				AdministradorJuego.getInstancia().detenerTodaLaMusica();
+				AdministradorJuego.getInstancia().reproducirMusicaJefe();
 			}
 		}	
 		
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-		
-		// Comportamiento del jefe (por el momento zumarah)
-		if(jefeActivo) {
-			if(jefeZumarah.getY() > 500) {
-				jefeZumarah.setY(jefeZumarah.getY() - 50 * delta);
-			} else {
-				//Movimiento del jefe
-			}
-			
-			for(int i = laseres.size - 1; i >= 0; i--) {
-				Bala laser = laseres.get(i);
-				if(laser.getHitbox().overlaps(jefeZumarah.getHitbox())) {
-					jefeZumarah.setVida(jefeZumarah.getVida() - laser.getDanio());
-					sonidoExplosion.play();
-					laseres.removeIndex(i);
-					
-					if(jefeZumarah.getVida() <= 0) {
-						jefeActivo = false;
-						jefeDerrotado = true;
-						nave.sumarPuntos(500);
-						jefeZumarah.getMusicaFondo().stop();
-						menu.getMusicaFondo().play();
-					}
-				}
-			}
-			if(jefeZumarah.getHitbox().overlaps(nave.getHitbox())) {
-				nave.restarVida();
-			}
-		}
-		
 		
 		yFondo1 -= velocidadFondo * delta;
 		yFondo2 -= velocidadFondo * delta;
@@ -190,6 +161,71 @@ public class GameScreen implements Screen {
 		font.draw(batch, "Vidas : " + nave.getVidas(), 480, 680);
 		font.draw(batch, "HighScore : " + game.getHigherScore(), 5, 25);
 		font.draw(batch, "P (Pausa)", 5, 680);
+		
+		// Comportamiento del jefe (por el momento zumarah)
+		if(jefeActivo) {
+			if(jefeZumarah.getY() > 500) {
+				jefeZumarah.setY(jefeZumarah.getY() - 50 * delta);
+			} else {
+				
+				jefeZumarah.movimiento(delta);
+				cooldownAtaque -= delta;
+				if(cooldownAtaque <= 0) {
+					float origenX = jefeZumarah.getX() + 35;
+			        float altoRayo = jefeZumarah.getY(); 
+			        
+			        RayoJefe nuevoRayo = new RayoJefe(origenX, altoRayo);
+			        ataquesJefes.add(nuevoRayo);
+			        cooldownAtaque = 3.0f;
+				}
+				
+				for(int i = ataquesJefes.size - 1; i >= 0; i--) {
+					RayoJefe rayo = ataquesJefes.get(i);
+					rayo.actualizar(delta);
+					
+					batch.draw(rayo.getTextura(), rayo.getX(), 0, 80, rayo.getHitbox().height);
+					
+					if(!rayo.isAdvirtiendo()) {
+						if(rayo.getHitbox().overlaps(nave.getHitbox())) {
+							nave.restarVida();
+							
+							if(nave.getVidas() <= 0) {
+								
+								AdministradorJuego.getInstancia().actualizarHighScore(nave.getPuntos());
+				        		AdministradorJuego.getInstancia().detenerTodaLaMusica();
+				        		
+				        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
+				        		dispose();
+				        	}
+							
+							ataquesJefes.removeIndex(i);
+							continue;
+						}
+						
+						if(rayo.terminoAtaque()) {
+							ataquesJefes.removeIndex(i);
+						}
+					}
+				}
+			}
+			
+			for(int i = laseres.size - 1; i >= 0; i--) {
+				Bala laser = laseres.get(i);
+				if(laser.getHitbox().overlaps(jefeZumarah.getHitbox())) {
+					jefeZumarah.setVida(jefeZumarah.getVida() - laser.getDanio());
+					sonidoExplosion.play();
+					laseres.removeIndex(i);
+					
+					if(jefeZumarah.getVida() <= 0) {
+						jefeActivo = false;
+						jefeDerrotado = true;
+						nave.sumarPuntos(500);
+						AdministradorJuego.getInstancia().detenerTodaLaMusica();
+						AdministradorJuego.getInstancia().reproducirMusicaJuego();
+					}
+				}
+			}
+		}
 		
 		nave.mover();
 		nave.dibujar(batch);
@@ -226,12 +262,9 @@ public class GameScreen implements Screen {
 	        		asteroide.setX(MathUtils.random(0, 300));
 		        	
 		        	if(nave.getVidas() <= 0) {
-		        		if(game.getHigherScore() <= nave.getPuntos()) {
-		        			game.setHigherScore(nave.getPuntos());
-		        		}
-		        		menu.getMusicaFondo().stop();
-		        		jefeZumarah.getMusicaFondo().stop();
-		        		sonidoGameOver.play();
+		        		AdministradorJuego.getInstancia().actualizarHighScore(nave.getPuntos());
+		        		AdministradorJuego.getInstancia().detenerTodaLaMusica();
+		        		
 		        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
 		        		dispose();
 		        	}
@@ -256,38 +289,38 @@ public class GameScreen implements Screen {
 		font.draw(batch, "" + energiaDisponible, 550, 25);
 		
 		//Logica de los tipos de laseres
-				for(int i = laseres.size - 1; i >= 0; i--) {
-					Bala laserActual = laseres.get(i);
+		for(int i = laseres.size - 1; i >= 0; i--) {
+			Bala laserActual = laseres.get(i);
 					
-					laserActual.actualizar(Gdx.graphics.getDeltaTime());
-					laserActual.dibujar(batch);
+			laserActual.actualizar(Gdx.graphics.getDeltaTime());
+			laserActual.dibujar(batch);
 					
-					boolean laserEliminado = false;
+			boolean laserEliminado = false;
 					
-					if(laserActual.getY() > 720) {
-						laseres.removeIndex(i);
-						continue; 
-					}
+			if(laserActual.getY() > 720) {
+				laseres.removeIndex(i);
+				continue; 
+			}
 					
-					for(int j = objetosCayendo.size - 1; j >= 0; j--) {
-						CaidaLibre obj = objetosCayendo.get(j);
-						
-						if(laserActual.getHitbox().overlaps(obj.getHitbox())) {
-							if(obj instanceof Asteroide) {
-								sonidoExplosion.play();
-								laseres.removeIndex(i);      
-								objetosCayendo.removeIndex(j); 
-								nave.sumarPuntos(100);
+			for(int j = objetosCayendo.size - 1; j >= 0; j--) {
+				CaidaLibre obj = objetosCayendo.get(j);
+					
+				if(laserActual.getHitbox().overlaps(obj.getHitbox())) {
+					if(obj instanceof Asteroide) {
+						sonidoExplosion.play();
+						laseres.removeIndex(i);      
+						objetosCayendo.removeIndex(j); 
+						nave.sumarPuntos(100);
 								
-								laserEliminado = true;
-								break;
-							}	
-						}
-					}
-					if(laserEliminado) {
-						continue; 
-					}
+						laserEliminado = true;
+						break;
+					}	
 				}
+			}
+			if(laserEliminado) {
+				continue; 
+			}
+		}
 		
 		// Dibuja los sprites de los laseres
 		for(Bala laser : laseres) {

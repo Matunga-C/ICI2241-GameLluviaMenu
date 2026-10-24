@@ -38,8 +38,7 @@ public class MainMenuScreen implements Screen {
 		batch.begin();
 		batch.draw(fondoMM, 0, 0);
 		font.getData().setScale(2, 2);
-		musicaFondo.setLooping(true);
-        musicaFondo.play();
+        font.draw(batch, "HighScore Global: " + AdministradorJuego.getInstancia().getHighScore(), 100, 320);
 		game.getFont().draw(game.getBatch(), "NAVE VS ASTEROIDES", 100, 440);
 		game.getFont().draw(game.getBatch(), "Presiona ENTER para jugar", 100, 410);
 		game.getFont().draw(game.getBatch(), "Presiona 1 para ver la ScoreBoard", 100, 380);
@@ -64,7 +63,7 @@ public class MainMenuScreen implements Screen {
 	@Override
 	public void show() {
 		this.fondoMM = new Texture("fondo_espacio_volt.jpg");
-		musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("musica_fondo_normal.mp3"));
+		AdministradorJuego.getInstancia().reproducirMusicaMenu();
 	}
 
 	@Override

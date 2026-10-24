@@ -21,6 +21,7 @@ public class Laser extends Bala{
 		this.hitbox.x = this.x;
 	}
 	
+	@Override
 	public void dispose() {
 		textura.dispose();
 		sonidoDisparo.dispose();

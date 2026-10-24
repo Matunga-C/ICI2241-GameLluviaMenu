@@ -36,11 +36,11 @@ public class Creditos implements Screen{
 		ScreenUtils.clear(0, 0, 1.0f, 0.5f);
 		batch.begin();
 		batch.draw(fondoCreditos, 0, 0);
-		font.draw(batch, "Juego desarrollado y creado por:", 500, 440);
-		font.draw(batch, "-Juan Mercade.", 500, 415);
-		font.draw(batch, "-Leonardo Jorquera", 500, 390);
-		font.draw(batch, "-Pablo Alvarez", 500, 365);
-		font.draw(batch, "Programacion Avanzada", 500, 340);
+		font.draw(batch, "Juego desarrollado y creado por:", 100, 440);
+		font.draw(batch, "-Juan Mercade.", 100, 415);
+		font.draw(batch, "-Leonardo Jorquera", 100, 390);
+		font.draw(batch, "-Pablo Alvarez", 100, 365);
+		font.draw(batch, "Programacion Avanzada", 100, 340);
 		font.draw(batch, "Preciona ESC para volver al Menu Principal", 5, 25);
 		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {

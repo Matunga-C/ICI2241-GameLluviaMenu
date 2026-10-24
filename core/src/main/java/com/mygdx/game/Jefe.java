@@ -1,6 +1,5 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -16,7 +15,6 @@ public abstract class Jefe {
 	protected Texture textura;
 	protected Sound sonidoAtaque;
 	protected Sound sonidoSpawn;
-	protected Music musicaFondo;
 	
 	public Jefe(float x, float y ,int vida, int danio, float ta) {
 		this.x = x;
@@ -45,7 +43,6 @@ public abstract class Jefe {
 	public Texture getTextura() {return textura;}
 	public Sound getSonidoAtaque() {return sonidoAtaque;}
 	public Sound getSonidoSpawn() {return sonidoSpawn;}
-	public Music getMusicaFondo() {return musicaFondo;}
 	
 
 	public void setX(float x) { 
@@ -63,6 +60,5 @@ public abstract class Jefe {
 	public void setHitbox(Rectangle hitbox) {this.hitbox = hitbox;}
 	public void setTextura(Texture textura) {this.textura = textura;}
 	public void setSonidoAtaque(Sound sa) {this.sonidoAtaque = sa;}
-	public void setMusicaFondo(Music mf) {this.musicaFondo = mf;}
 	
 }	

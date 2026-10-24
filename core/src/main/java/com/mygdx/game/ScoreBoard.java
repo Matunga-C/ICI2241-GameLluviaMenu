@@ -40,7 +40,8 @@ public class ScoreBoard implements Screen{
 		ScreenUtils.clear(0, 0, 1.0f, 0.5f);
 		batch.begin();
 		batch.draw(fondoSB, 0, 0);
-		font.draw(batch, "Tabla de Puntaje y Tiempo", 500, 650);
+		font.draw(batch, "Tabla de Puntaje y Tiempo", 100, 650);
+		font.draw(batch, "Aun no se implementa", 100, 620);
 		
 		font.draw(batch, "Preciona ESC para volver al Menu Principal", 5, 25);
 		if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
