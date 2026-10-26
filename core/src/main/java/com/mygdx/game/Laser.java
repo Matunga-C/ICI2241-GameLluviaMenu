@@ -14,12 +14,15 @@ public class Laser extends Bala{
 	}
 	
 	@Override
-	public void actualizar(float delta) {
+	public void actualizarLaser(float delta) {
 		this.y += 480 * delta;
 		
 		this.hitbox.y = this.y;
 		this.hitbox.x = this.x;
 	}
+	
+	@Override
+	public void actualizarRayo(float delta, Nave nave, float jefeCentroX, float jefeCentroY) {}
 	
 	@Override
 	public void dispose() {

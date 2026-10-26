@@ -3,16 +3,14 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 
-public class AdministradorJuego {
-    private static AdministradorJuego instancia;
+public class AdministradorAudio {
+    private static AdministradorAudio instancia;
 
-    private int highScore;
     private Music musicaMenu;
     private Music musicaJuego;
     private Music musicaJefe;
     
-    private AdministradorJuego() {
-        this.highScore = 0;
+    private AdministradorAudio() {
         
         this.musicaMenu = Gdx.audio.newMusic(Gdx.files.internal("Music_PesoEstable.mp3")); 
         this.musicaMenu.setLooping(true);
@@ -24,21 +22,11 @@ public class AdministradorJuego {
         this.musicaJefe.setLooping(true);
     }
     
-    public static AdministradorJuego getInstancia() {
+    public static AdministradorAudio getInstancia() {
         if (instancia == null) {
-            instancia = new AdministradorJuego();
+            instancia = new AdministradorAudio();
         }
         return instancia;
-    }
-    
-    public int getHighScore() { 
-        return highScore; 
-    }
-    
-    public void actualizarHighScore(int puntajeNuevo) {
-        if (puntajeNuevo > this.highScore) {
-            this.highScore = puntajeNuevo;
-        }
     }
     
     public void reproducirMusicaMenu() {

@@ -19,7 +19,8 @@ public abstract class Bala {
 		this.y = y;
 	}
 	
-	public abstract void actualizar(float delta);
+	public abstract void actualizarLaser(float delta);
+	public abstract void actualizarRayo(float delta, Nave nave, float jefeCentroX, float jefeCentroY);
 	
 	public void dibujar(SpriteBatch batch) {
 		batch.draw(textura, x, y, 30, 60);

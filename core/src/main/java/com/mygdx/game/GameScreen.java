@@ -8,7 +8,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
@@ -36,10 +38,12 @@ public class GameScreen implements Screen {
 	private int energiaDisponible = 30;
 	private boolean jefeActivo = false;
 	private boolean jefeDerrotado = false;
+	private boolean juegoTerminado = false;
 	
 	private Array<Bala> laseres;
 	private Array<CaidaLibre> objetosCayendo;
 	private Array<RayoJefe> ataquesJefes;
+	private Vector2 inicioRayoAux, finRayoAux;
 	
 	private float velocidadFondo = 150f;
 	private float tiempoMensaje = 0f;
@@ -71,9 +75,10 @@ public class GameScreen implements Screen {
 		yFondo2 = 700;
         laseres = new Array<>();
         ataquesJefes = new Array<>();
+        inicioRayoAux = new Vector2();
+        finRayoAux = new Vector2();
         sonidoExplosion = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
-        AdministradorJuego.getInstancia().reproducirMusicaJuego();
-        
+        AdministradorAudio.getInstancia().reproducirMusicaJuego();        
 	}
 	
 	@Override
@@ -85,7 +90,7 @@ public class GameScreen implements Screen {
 		
 		// Poner juego en pausa (falta arreglar que se reinician los puntajes y vidas)
 		if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-			AdministradorJuego.getInstancia().detenerTodaLaMusica();
+			AdministradorAudio.getInstancia().detenerTodaLaMusica();
 			game.setScreen(new PausaScreen(game, this, menu));
 		}
 		
@@ -135,8 +140,8 @@ public class GameScreen implements Screen {
 		if(nave.getPuntos() >= 2500 && nave.getPuntos() != 0) {
 			if(!jefeActivo && !jefeDerrotado) {
 				jefeActivo = true;
-				AdministradorJuego.getInstancia().detenerTodaLaMusica();
-				AdministradorJuego.getInstancia().reproducirMusicaJefe();
+				AdministradorAudio.getInstancia().detenerTodaLaMusica();
+				AdministradorAudio.getInstancia().reproducirMusicaJefe();
 			}
 		}	
 		
@@ -179,23 +184,26 @@ public class GameScreen implements Screen {
 			        cooldownAtaque = 3.0f;
 				}
 				
+				float centroJefeX = jefeZumarah.getX() + 75;
+				float centroJefeY = jefeZumarah.getY() + 30;
+				
 				for(int i = ataquesJefes.size - 1; i >= 0; i--) {
 					RayoJefe rayo = ataquesJefes.get(i);
-					rayo.actualizar(delta);
 					
-					batch.draw(rayo.getTextura(), rayo.getX(), 0, 80, rayo.getHitbox().height);
+					rayo.actualizarRayo(delta, nave, centroJefeX, centroJefeY);
 					
-					if(!rayo.isAdvirtiendo()) {
-						if(rayo.getHitbox().overlaps(nave.getHitbox())) {
+					batch.draw(rayo.getRegion(), rayo.getOrigenX() - 40, rayo.getOrigenY(), 40, 0, 80,rayo.getDistancia(), 1f, 1f, rayo.getAngulo() - 90);
+					
+					if(rayo.isLetal()) {
+						
+						inicioRayoAux.set(rayo.getOrigenX(), rayo.getOrigenY());
+						finRayoAux.set(rayo.getDestinoX(), rayo.getDestinoY());
+						
+						if(Intersector.intersectSegmentRectangle(inicioRayoAux, finRayoAux, nave.getHitbox())){
 							nave.restarVida();
 							
 							if(nave.getVidas() <= 0) {
-								
-								AdministradorJuego.getInstancia().actualizarHighScore(nave.getPuntos());
-				        		AdministradorJuego.getInstancia().detenerTodaLaMusica();
-				        		
-				        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
-				        		dispose();
+								procesarGameOver();
 				        	}
 							
 							ataquesJefes.removeIndex(i);
@@ -220,8 +228,8 @@ public class GameScreen implements Screen {
 						jefeActivo = false;
 						jefeDerrotado = true;
 						nave.sumarPuntos(500);
-						AdministradorJuego.getInstancia().detenerTodaLaMusica();
-						AdministradorJuego.getInstancia().reproducirMusicaJuego();
+						AdministradorAudio.getInstancia().detenerTodaLaMusica();
+						AdministradorAudio.getInstancia().reproducirMusicaJuego();
 					}
 				}
 			}
@@ -262,11 +270,7 @@ public class GameScreen implements Screen {
 	        		asteroide.setX(MathUtils.random(0, 300));
 		        	
 		        	if(nave.getVidas() <= 0) {
-		        		AdministradorJuego.getInstancia().actualizarHighScore(nave.getPuntos());
-		        		AdministradorJuego.getInstancia().detenerTodaLaMusica();
-		        		
-		        		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
-		        		dispose();
+		        		procesarGameOver();
 		        	}
 				} else if(obj instanceof PowerUp) {
 					PowerUp powerUp = (PowerUp)obj;
@@ -292,7 +296,7 @@ public class GameScreen implements Screen {
 		for(int i = laseres.size - 1; i >= 0; i--) {
 			Bala laserActual = laseres.get(i);
 					
-			laserActual.actualizar(Gdx.graphics.getDeltaTime());
+			laserActual.actualizarLaser(Gdx.graphics.getDeltaTime());
 			laserActual.dibujar(batch);
 					
 			boolean laserEliminado = false;
@@ -354,6 +358,11 @@ public class GameScreen implements Screen {
 	public void dispose() {
       nave.dispose();
       asteroide.dispose();
+      jefeZumarah.dispose();
+      fondo1.dispose();
+      fondo2.dispose();
+      simRecarga.dispose();
+      sinEnergia.dispose();
 	}
 	
 	public Texture getFondo1() {
@@ -363,4 +372,13 @@ public class GameScreen implements Screen {
 		return fondo2;
 	}
 	
+	public void procesarGameOver() {
+		if(juegoTerminado) return;
+		
+		juegoTerminado = true;
+		AdministradorAudio.getInstancia().detenerTodaLaMusica();
+		
+		game.setScreen(new GameOverScreen(game, nave.getPuntos(), menu));
+	    dispose();
+	}
 }

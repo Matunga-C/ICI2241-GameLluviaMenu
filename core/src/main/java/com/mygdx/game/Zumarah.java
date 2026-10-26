@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 
 public class Zumarah extends Jefe{
-	float tiempoSigMov = 3.0f;
+	float tiempoSigMov = 3.5f;
 	
 	public Zumarah(float x, float y, int vida, int danio, float ta) {
 		super(x, y, vida, danio, ta);
